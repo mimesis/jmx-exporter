@@ -77,13 +77,27 @@
         <configuration>
           <header>src/header.txt</header>
           <strictCheck>true</strictCheck>
+          <encoding>${encoding}</encoding>
+          <properties>
+            <owner>${project.organization.name}</owner>
+            <year>${project.inceptionYear}</year>
+            <email>${project.organization.url}</email>
+          </properties>
+          <excludes>
+            <exclude>target/**</exclude>
+            <exclude>.clover/**</exclude>
+            <exclude>**/*.md</exclude>
+            <exclude>.gitignore</exclude>
+          </excludes>
         </configuration>
-        <execution>
-          <phase>test</phase>
-          <goals>
-            <goal>check</goal>
-          </goals>
-        </execution>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
