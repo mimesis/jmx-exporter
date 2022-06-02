@@ -38,7 +38,7 @@ public class Exporter4CloudwatchCli extends Exporter4CloudwatchSupport{
       }
       cmd.append(" --metric-name ").append(metricNameOf(d.objectName, d.key));
       cmd.append(" --value ").append(d.value);
-      cmd.append(" --timestamp ").append(_dateFormat.format(d.timestampDate));
+      cmd.append(" --timestamp ").append(_dateFormat.get().format(d.timestampDate));
       if (d.unit != null) {
         cmd.append(" --unit ").append(d.unit);
       }

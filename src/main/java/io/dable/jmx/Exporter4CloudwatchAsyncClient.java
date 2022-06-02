@@ -25,6 +25,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.PutMetricDataRequest;
+import com.amazonaws.services.cloudwatch.model.PutMetricDataResult;
 
 /**
  * Exporter that send data directly to cloudwatch, so nothing is printed on stdout
@@ -35,7 +36,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
 
   private static final int AWS_METRICS_MAX = 20;
   private final AWSCredentials _awsCredentials;
-  private Future<Void> _lastFuture = null;
+  private Future<PutMetricDataResult> _lastFuture;
 
   public Exporter4CloudwatchAsyncClient(Config config) throws Exception {
     super(config);
@@ -76,7 +77,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
       if (metrics.size() == AWS_METRICS_MAX ) {
         waitEndOfLastExport();
         _lastFuture = awsClient.putMetricDataAsync(newPutMetricDataRequest(metrics));
-        metrics = new ArrayList<MetricDatum>(AWS_METRICS_MAX);
+        metrics = new ArrayList<>(AWS_METRICS_MAX);
       }
     }
     if (metrics.size() > 0) {
@@ -96,17 +97,15 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
   /**
    * @param v dimensions as String in "key1=value1,key2=value2..." (null return empty collection)
    */
-  private Collection<Dimension> parseDimensions(String v) throws Exception {
-    ArrayList<Dimension> back = new ArrayList<Dimension>();
+  private Collection<Dimension> parseDimensions(String v) {
+    ArrayList<Dimension> back = new ArrayList<>();
     if (v != null) {
       String[] pairs = v.split(",");
-      if (pairs != null) {
-        for(String s : pairs) {
-          int pos = s.indexOf("=");
-          if (pos > 0) {
-            Dimension d = new Dimension().withName(s.substring(0, pos)).withValue(s.substring(pos+1));
-            back.add(d);
-          }
+      for(String s : pairs) {
+        int pos = s.indexOf("=");
+        if (pos > 0) {
+          Dimension d = new Dimension().withName(s.substring(0, pos)).withValue(s.substring(pos+1));
+          back.add(d);
         }
       }
     }
@@ -126,7 +125,6 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
     try {
       waitEndOfLastExport();
     } catch (Exception e) {
-      // TODO Auto-generated catch block
       Log.logger.warn(e);
     }
     super.close();

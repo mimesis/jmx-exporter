@@ -17,15 +17,16 @@ package io.dable.jmx;
 
 import java.text.SimpleDateFormat;
 /**
- * format for zabbix sender (one line per value)
+ * format for cloud watch (one line per value)
  *
  * @author david.bernard@mimesis-republic.com
  */
-abstract public class Exporter4CloudwatchSupport extends Exporter {
+abstract public class Exporter4CloudwatchSupport extends Exporter{
 
   protected final String _namespace;
   protected final String _dimensions;
-  protected final SimpleDateFormat _dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  protected final static ThreadLocal<SimpleDateFormat> _dateFormat = ThreadLocal.withInitial(
+      () -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
   protected final String _cmd;
   protected final String _region;
   protected final String _secretKey;
@@ -42,7 +43,7 @@ abstract public class Exporter4CloudwatchSupport extends Exporter {
     _spaceKeyReplacement = config.getChar("cloudwatch.key.space.replaceby", '_');
   }
 
-  protected String metricNameOf(String objectName, String key) throws Exception {
+  protected String metricNameOf(String objectName, String key) {
     StringBuilder b = new StringBuilder();
     String[] v = objectName.split("=|,");
     for (int i = 0; i <= (v.length - 2); i+= 2) {
