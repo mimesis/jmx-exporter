@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
-
-import static com.mimesis.jmx.Log.logger;
+package io.dable.jmx;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -64,15 +62,15 @@ class MBeanServerW4Remote extends MBeanServerW {
     JMXServiceURL jmxUrl = new JMXServiceURL(url);
     Map<String, Object> m = new HashMap<String, Object>();
     m.put(JMXConnector.CREDENTIALS, new String[] { user, pass });
-    logger.info("JMXConnector...");
+    Log.logger.info("JMXConnector...");
      _connector = JMXConnectorFactory.connect(jmxUrl, m);
-    logger.info("...JMXConnector DONE");
+    Log.logger.info("...JMXConnector DONE");
   }
 
   MBeanServerConnection mbs() throws Exception {
-    logger.info("MBeanServerConnection...");
+    Log.logger.info("MBeanServerConnection...");
     MBeanServerConnection back = _connector.getMBeanServerConnection();
-    logger.info("...MBeanServerConnection DONE");
+    Log.logger.info("...MBeanServerConnection DONE");
     return back;
   }
 

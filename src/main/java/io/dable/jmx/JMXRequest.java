@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
+package io.dable.jmx;
 
 import java.util.ArrayList;
 import java.util.Collections;

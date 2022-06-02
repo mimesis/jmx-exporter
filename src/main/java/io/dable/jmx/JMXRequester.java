@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
+package io.dable.jmx;
 
-import static com.mimesis.jmx.Log.logger;
+import static io.dable.jmx.Log.logger;
 
 import java.util.ArrayList;
 import java.util.Collection;

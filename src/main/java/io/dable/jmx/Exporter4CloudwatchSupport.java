@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
+package io.dable.jmx;
 
 import java.text.SimpleDateFormat;
 /**
@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat;
  *
  * @author david.bernard@mimesis-republic.com
  */
-abstract public class Exporter4CloudwatchSupport extends Exporter{
+abstract public class Exporter4CloudwatchSupport extends Exporter {
 
   protected final String _namespace;
   protected final String _dimensions;

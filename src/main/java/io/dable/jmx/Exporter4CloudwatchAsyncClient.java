@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
-
-import static com.mimesis.jmx.Log.logger;
+package io.dable.jmx;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,7 +57,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
     int i = 0;
     for(Result d : data) {
       if (!(d.value instanceof Number)) {
-        logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
+        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
         continue;
       }
       MetricDatum metricDatum = new MetricDatum()
@@ -129,7 +127,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
       waitEndOfLastExport();
     } catch (Exception e) {
       // TODO Auto-generated catch block
-      logger.warn(e);
+      Log.logger.warn(e);
     }
     super.close();
   }

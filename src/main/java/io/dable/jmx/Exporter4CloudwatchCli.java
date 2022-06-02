@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
-
-import static com.mimesis.jmx.Log.logger;
+package io.dable.jmx;
 
 import java.util.Collection;
 
@@ -35,7 +33,7 @@ public class Exporter4CloudwatchCli extends Exporter4CloudwatchSupport{
     for(Result d : data) {
       StringBuilder cmd = new StringBuilder(_cmd);
       if (!(d.value instanceof Number)) {
-        logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
+        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
         continue;
       }
       cmd.append(" --metric-name ").append(metricNameOf(d.objectName, d.key));

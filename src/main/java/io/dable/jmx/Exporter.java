@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
+package io.dable.jmx;
 
+import java.io.Closeable;
 import java.util.Collection;
 
-/**
- * format for Cacti JTG every data on a single line
- *
- * @author david.bernard@mimesis-republic.com
- */
-public class Exporter4Cacti extends Exporter{
-
-  public Exporter4Cacti(Config config) throws Exception {
-  }
-
-  // TODO manage objectName
-  public void export(Collection<Result> data) throws Exception {
-    for (Result d : data) {
-      System.out.format("%s: %s ", d.key, String.valueOf(d.value));
+abstract public class Exporter implements Closeable{
+  public static Exporter newFor(Config cfg) throws Exception {
+    Class<?> clazz = cfg.getClazz("exporter.class", Exporter4CloudwatchAsyncClient.class);
+    if (!Exporter.class.isAssignableFrom(clazz)) {
+      throw new IllegalArgumentException("value for 'exporter.class' should be a subclass of Exporter :" + clazz.getCanonicalName());
     }
-    System.out.println();
+    return (Exporter) clazz.getConstructor(Config.class).newInstance(cfg);
   }
 
+  //public void this(Config config) throws Exception;
+  public abstract void export(Collection<Result> data) throws Exception;
+  public void close() {};
 }

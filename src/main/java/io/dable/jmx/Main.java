@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mimesis.jmx;
+package io.dable.jmx;
 
-import static com.mimesis.jmx.Log.logger;
+import static io.dable.jmx.Log.logger;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
@@ -26,10 +26,10 @@ import java.util.List;
  * To use as java's agent, need to be declare in META-INF/MANIFEST.MF with
  *
  * <pre>
- * Agent-Class: com.mimesis.jmx.Main
+ * Agent-Class: io.dable.jmx.Main
  * </pre>
  *
- * @see http://download.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html
+ * @see <a href="http://download.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html">...</a>
  */
 public class Main {
 
