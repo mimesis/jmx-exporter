@@ -35,7 +35,6 @@ public class Main {
 
   public static void agentmain(String args) {
     try {
-      logger.info("start jmx-exporter as agent");
       start(configurations(args.split(",")), Long.getLong("jmx.loop.sleep", 0));
     } catch (Exception exc) {
       exc.printStackTrace();

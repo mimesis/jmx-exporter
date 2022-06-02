@@ -27,7 +27,6 @@ abstract public class Exporter implements Closeable{
     return (Exporter) clazz.getConstructor(Config.class).newInstance(cfg);
   }
 
-  //public void this(Config config) throws Exception;
   public abstract void export(Collection<Result> data) throws Exception;
   public void close() {};
 }

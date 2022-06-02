@@ -15,17 +15,16 @@
  */
 package io.dable.jmx;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.Future;
-
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClient;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.PutMetricDataRequest;
 import com.amazonaws.services.cloudwatch.model.PutMetricDataResult;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.Future;
 
 /**
  * Exporter that send data directly to cloudwatch, so nothing is printed on stdout
@@ -35,36 +34,30 @@ import com.amazonaws.services.cloudwatch.model.PutMetricDataResult;
 public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
 
   private static final int AWS_METRICS_MAX = 20;
-  private final AWSCredentials _awsCredentials;
   private Future<PutMetricDataResult> _lastFuture;
 
   public Exporter4CloudwatchAsyncClient(Config config) throws Exception {
     super(config);
-    _awsCredentials = new BasicAWSCredentials(config.getString("cloudwatch.credential.accessKey", null), config.getString("cloudwatch.credential.secretKey", null));
   }
 
   //TODO use the ability to send several data at once or to send 'statisticsValues' instead of 'value'
   @Override
   public void export(Collection<Result> data) throws Exception {
-    //TODO configure client to use POST
-    AmazonCloudWatchAsyncClient awsClient = new AmazonCloudWatchAsyncClient(_awsCredentials);
-    if (_region != null) {
-      awsClient.setEndpoint(String.format("monitoring.%s.amazonaws.com", _region));
-    }
+    AmazonCloudWatchAsync awsClient =
+        AmazonCloudWatchAsyncClientBuilder.standard().withRegion(_region).build();
 
     Collection<Dimension> dimensions = parseDimensions(_dimensions);
-    ArrayList<MetricDatum> metrics = new ArrayList<MetricDatum>(AWS_METRICS_MAX);
-    System.out.println("send START");
+    ArrayList<MetricDatum> metrics = new ArrayList<>(AWS_METRICS_MAX);
     int i = 0;
     for(Result d : data) {
       if (!(d.value instanceof Number)) {
-        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
+        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, d.value));
         continue;
       }
       MetricDatum metricDatum = new MetricDatum()
         .withMetricName(metricNameOf(d.objectName, d.key))
         .withValue(((Number)d.value).doubleValue())
-        .withTimestamp(d.timestampDate)
+        //.withTimestamp(d.timestampDate)
         ;
       if (dimensions.size() > 0) {
         metricDatum = metricDatum.withDimensions(dimensions);
@@ -72,7 +65,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
       if (d.unit != null) {
         metricDatum = metricDatum.withUnit(d.unit);
       }
-      System.out.println("send : " + (++i) + metricDatum.getMetricName());
+      //System.out.println("send : " + (++i) + " " + metricDatum.getMetricName() + " " + metricDatum.getValue());
       metrics.add(metricDatum);
       if (metrics.size() == AWS_METRICS_MAX ) {
         waitEndOfLastExport();
@@ -115,7 +108,9 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
   private void waitEndOfLastExport() throws Exception {
     // block until last export is not done
     if (_lastFuture != null) {
-      _lastFuture.get();
+      PutMetricDataResult putMetricDataResult = _lastFuture.get();
+      //Log.logger.info(putMetricDataResult.getSdkResponseMetadata().toString());
+      //Log.logger.info(putMetricDataResult.getSdkHttpMetadata().getAllHttpHeaders().toString());
       _lastFuture = null;
     }
   }

@@ -15,6 +15,7 @@
  */
 package io.dable.jmx;
 
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -29,16 +30,16 @@ public class Exporter4CloudwatchCli extends Exporter4CloudwatchSupport{
   }
 
   //TODO use the ability to send several data at once or to send 'statisticsValues' instead of 'value'
-  public void export(Collection<Result> data) throws Exception {
+  public void export(Collection<Result> data) throws IOException, InterruptedException {
     for(Result d : data) {
       StringBuilder cmd = new StringBuilder(_cmd);
       if (!(d.value instanceof Number)) {
-        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, String.valueOf(d.value) ));
+        Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, d.value));
         continue;
       }
       cmd.append(" --metric-name ").append(metricNameOf(d.objectName, d.key));
       cmd.append(" --value ").append(d.value);
-      cmd.append(" --timestamp ").append(_dateFormat.get().format(d.timestampDate));
+      //cmd.append(" --timestamp ").append(_dateFormat.get().format(d.timestampDate));
       if (d.unit != null) {
         cmd.append(" --unit ").append(d.unit);
       }
@@ -58,7 +59,13 @@ public class Exporter4CloudwatchCli extends Exporter4CloudwatchSupport{
         cmd.append(" --access-key-id ").append(_accessKey);
       }
       cmd.append('\n');
-      System.out.print(cmd.toString());
+      String command = cmd.toString();
+      Log.logger.info(command);
+      Process process = Runtime.getRuntime().exec(command);
+      int term = process.waitFor();
+      if (term != 0) {
+        Log.logger.info("sent metric to cloudwatch failed with %s" + term);
+      }
     }
   }
 }

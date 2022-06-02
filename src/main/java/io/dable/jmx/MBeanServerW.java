@@ -56,22 +56,16 @@ class MBeanServerW4Remote extends MBeanServerW {
     if (url != null && !url.startsWith("service:jmx")) {
       url = "service:jmx:rmi:///jndi/rmi://" + url + "/jmxrmi";
     }
-    // System.err.println("-- " + jmxURL);
     String user = cfg.getString("jmx.user", null);
     String pass = cfg.getString("jmx.pwd", null);
     JMXServiceURL jmxUrl = new JMXServiceURL(url);
     Map<String, Object> m = new HashMap<String, Object>();
     m.put(JMXConnector.CREDENTIALS, new String[] { user, pass });
-    Log.logger.info("JMXConnector...");
      _connector = JMXConnectorFactory.connect(jmxUrl, m);
-    Log.logger.info("...JMXConnector DONE");
   }
 
   MBeanServerConnection mbs() throws Exception {
-    Log.logger.info("MBeanServerConnection...");
-    MBeanServerConnection back = _connector.getMBeanServerConnection();
-    Log.logger.info("...MBeanServerConnection DONE");
-    return back;
+    return _connector.getMBeanServerConnection();
   }
 
   public void close(){

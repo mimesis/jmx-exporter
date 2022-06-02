@@ -36,8 +36,8 @@ abstract public class Exporter4CloudwatchSupport extends Exporter{
   public Exporter4CloudwatchSupport(Config config) throws Exception {
     _namespace = config.getString("cloudwatch.namespace", null);
     _dimensions = config.getString("cloudwatch.dimensions", null);
-    _cmd = config.getString("cloudwatch.cmd", "mon-put-data");
-    _region = config.getString("cloudwatch.region", null);
+    _cmd = config.getString("cloudwatch.cmd", "aws cloudwatch put-metric-data");
+    _region = config.getString("cloudwatch.region", "ap-northeast-2");
     _secretKey = config.getString("cloudwatch.credential.secretKey", null);
     _accessKey = config.getString("cloudwatch.credential.accessKey", null);
     _spaceKeyReplacement = config.getChar("cloudwatch.key.space.replaceby", '_');

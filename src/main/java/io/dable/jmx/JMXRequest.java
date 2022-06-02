@@ -69,7 +69,7 @@ public class JMXRequest {
     return groupByObjectName(back);
   }
 
-  public static JMXRequest newFor(String label, String param1) throws Exception {
+  public static JMXRequest newFor(String label, String param1) {
     //System.err.println("-->> " + label + " # " + param1);
     JMXRequest back = new JMXRequest();
     Matcher m = null;
@@ -162,11 +162,7 @@ public class JMXRequest {
       m.put(newReq.objectName, newReq);
     }
     ArrayList<JMXRequest> back = new ArrayList<JMXRequest>(m.values());
-    Collections.sort(back, new Comparator<JMXRequest>() {
-      public int compare(JMXRequest o1, JMXRequest o2) {
-        return o1.objectName.compareTo(o2.objectName);
-      }
-    });
+    Collections.sort(back, (o1, o2) -> o1.objectName.compareTo(o2.objectName));
     return back.toArray(new JMXRequest[back.size()]);
   }
 
