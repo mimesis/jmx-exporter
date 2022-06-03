@@ -54,9 +54,13 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
         Log.logger.info(String.format("CloudWatch only accept value of type Number : [%s][%s] => %s", d.objectName, d.key, d.value));
         continue;
       }
+      double value = ((Number) d.value).doubleValue();
+      if (Double.isNaN(value)) {
+        value = 0.0d; // Cloudwatch does not support NaN
+      }
       MetricDatum metricDatum = new MetricDatum()
         .withMetricName(metricNameOf(d.objectName, d.key))
-        .withValue(((Number)d.value).doubleValue())
+        .withValue(value)
         //.withTimestamp(d.timestampDate)
         ;
       if (dimensions.size() > 0) {
@@ -65,7 +69,7 @@ public class Exporter4CloudwatchAsyncClient extends Exporter4CloudwatchSupport {
       if (d.unit != null) {
         metricDatum = metricDatum.withUnit(d.unit);
       }
-      //System.out.println("send : " + (++i) + " " + metricDatum.getMetricName() + " " + metricDatum.getValue());
+      Log.logger.info("send : " + (++i) + " " + metricDatum.getMetricName() + " " + metricDatum.getValue());
       metrics.add(metricDatum);
       if (metrics.size() == AWS_METRICS_MAX ) {
         waitEndOfLastExport();
