@@ -132,7 +132,9 @@ public class JMXRequest {
         new ItemInfo("TotalPhysicalMemorySize"),
         new ItemInfo("TotalSwapSpaceSize"),
         new ItemInfo("AvailableProcessors"),
-        new ItemInfo("SystemLoadAverage")
+        new ItemInfo("SystemLoadAverage"),
+        new ItemInfo("ProcessCpuLoad"),
+        new ItemInfo("SystemCpuLoad"),
       };
     } else if ((m = _jmxPattern.matcher(label)).matches()) {
       back.objectName = m.group(1);

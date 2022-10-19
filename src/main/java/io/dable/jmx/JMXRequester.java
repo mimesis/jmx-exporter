@@ -17,10 +17,13 @@ package io.dable.jmx;
 
 import static io.dable.jmx.Log.logger;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -36,11 +39,9 @@ import javax.management.openmbean.CompositeDataSupport;
 
 public class JMXRequester {
   private final MBeanServerW _mbsw;
-  private final long _cpuSampleDuration;
   private final Exporter _exporter;
 
   public JMXRequester(Config cfg) throws Exception {
-    _cpuSampleDuration = cfg.getLong("cpu.sample.duration", 1000);
     _mbsw = MBeanServerW.newFor(cfg);
     _exporter = Exporter.newFor(cfg);
   }
@@ -98,9 +99,10 @@ public class JMXRequester {
         }
         //HACK
         if ("java.lang:type=OperatingSystem".equals(req.objectName)){
-          CpuUsageSample sample = getCpuUsage(connection, _cpuSampleDuration);
+          CpuUsageSample sample = getCpuUsage(connection);
           back.add(new Result(timestamp, "java.lang:type=OperatingSystem", "ProcessCpuTime", sample.processCpuTime, "Milliseconds"));
-          back.add(new Result(timestamp, "java.lang:type=OperatingSystem", "CpuUsage", sample.usage(), "Percent"));
+          back.add(new Result(timestamp, "java.lang:type=OperatingSystem", "ProcessCpuLoad", sample.processCpuLoad, "Percent"));
+          back.add(new Result(timestamp, "java.lang:type=OperatingSystem", "SystemCpuLoad", sample.systemCpuLoad, "Percent"));
         }
       } catch (javax.management.InstanceNotFoundException exc) {
         //exc.printStackTrace();
@@ -128,45 +130,31 @@ public class JMXRequester {
     return attributesName;
   }
 
-  //HACK Jvm doesn't provide CPU usage by default, so we calculte it by sampling (!! sampling include network time)
   private static class CpuUsageSample {
-    int  availableProcessors = 1;
-    long timestamp       = 0; // epoch in nanoseconds
-    long duration        = 0; // in nanoseconds
-    long processCpuDuration  = 0; // in nanoseconds
-    long processCpuTime  = 0; // in nanoseconds
-    double usage() {
-      return ((double) processCpuDuration)/(duration * availableProcessors) ;
-    }
+    long processCpuTime; // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/OperatingSystemMXBean.html#getProcessCpuTime()
+    double systemCpuLoad; // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/OperatingSystemMXBean.html#getSystemCpuLoad()
+    double processCpuLoad; // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.management/com/sun/management/OperatingSystemMXBean.html#getProcessCpuLoad()
   }
 
-  private CpuUsageSample _lastSample = null;
-
-  private CpuUsageSample initCpuUsageInfo(MBeanServerConnection connection) throws Exception {
-    CpuUsageSample back = new CpuUsageSample();
-    //MBeanInfo info = connection.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "AvailableProcessors");
-    long uptime = (Long)connection.getAttribute(new ObjectName("java.lang:type=Runtime"), "Uptime");
-    back.processCpuTime =  (Long)connection.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "ProcessCpuTime");
-    back.timestamp = System.nanoTime();
-    back.processCpuDuration =  back.processCpuTime;
-    back.duration = uptime * 1000;
-    back.availableProcessors = (Integer)connection.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "AvailableProcessors");
-    return back;
+  private static double roundPercent(double value) {
+    BigDecimal bd = new BigDecimal(Double.toString(value));
+    bd = bd.setScale(2, RoundingMode.HALF_UP);
+    return bd.doubleValue();
   }
 
-  private CpuUsageSample getCpuUsage(MBeanServerConnection connection, long sampleDuration) throws Exception {
-    if ( _lastSample == null ) {
-      _lastSample = initCpuUsageInfo(connection);
+  private CpuUsageSample getCpuUsage(MBeanServerConnection connection) {
+    CpuUsageSample sample = new CpuUsageSample();
+    try {
+      ObjectName osObjectName = new ObjectName("java.lang:type=OperatingSystem");
+      sample.processCpuTime = (Long)connection.getAttribute(osObjectName, "ProcessCpuTime");
+      sample.processCpuTime = TimeUnit.NANOSECONDS.toMillis(sample.processCpuTime);
+      sample.processCpuLoad = (Double) connection.getAttribute(osObjectName, "ProcessCpuLoad");
+      sample.processCpuLoad = roundPercent(sample.processCpuLoad * 100.0d);
+      sample.systemCpuLoad = (Double) connection.getAttribute(osObjectName, "SystemCpuLoad");
+      sample.systemCpuLoad = roundPercent(sample.systemCpuLoad * 100.0d);
+    } catch (Exception ignored) {
+      // ignored
     }
-
-    Thread.sleep(sampleDuration);
-    CpuUsageSample newSample = new CpuUsageSample();
-    newSample.processCpuTime =  (Long)connection.getAttribute(new ObjectName("java.lang:type=OperatingSystem"), "ProcessCpuTime");
-    newSample.timestamp = System.nanoTime();
-    newSample.processCpuDuration =  newSample.processCpuTime - _lastSample.processCpuTime;
-    newSample.duration = (newSample.timestamp - _lastSample.timestamp); //or by uptime difference ??
-    newSample.availableProcessors = _lastSample.availableProcessors;
-    _lastSample = newSample;
-    return _lastSample;
+    return sample;
   }
 }
